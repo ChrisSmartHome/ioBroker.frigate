@@ -805,7 +805,7 @@ class Frigate extends utils.Adapter {
               });
             } else {
               await this.sendToAsync(sendInstance, {
-                user: user,
+                chatId: user,
                 message: fileName || messageText,
                 text: fileName || messageText,
                 type: type,

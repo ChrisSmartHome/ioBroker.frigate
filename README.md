@@ -119,6 +119,22 @@ Event with Person: frigate.0.events.after.label = person
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+- (mcm1957) Adapter requires js-controller 5.0.19 as minimum now.
+- (mcm1957) Several issues reported by adapter chacker have been fixed.
+  
+### 1.3.1 (2024-08-30)
+
+- fixed to much states
+
+### 1.3.0 (2024-07-29)
+
+- fix for frigate v0.14
+
+### 1.2.1 (2024-06-06)
+
+- add remote to restart frigate
+
 ### 1.2.0 (2024-04-10)
 
 - add new notifications sending

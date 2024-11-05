@@ -124,6 +124,19 @@ class Frigate extends utils.Adapter {
       },
       native: {},
     });
+
+    await this.extendObjectAsync('remote.restart', {
+      type: 'state',
+      common: {
+        name: 'Restart Frigate',
+        type: 'boolean',
+        role: 'button',
+        def: false,
+        read: true,
+        write: true,
+      },
+      native: {},
+    });
     await this.extendObjectAsync('remote.pauseNotifications', {
       type: 'state',
       common: {
@@ -136,6 +149,7 @@ class Frigate extends utils.Adapter {
       },
       native: {},
     });
+
     await this.extendObjectAsync('remote.pauseNotificationsForTime', {
       type: 'state',
       common: {
@@ -150,10 +164,13 @@ class Frigate extends utils.Adapter {
     });
     await this.initMqtt();
   }
-  async cleanOldObjects(vin) {
+  async cleanOldObjects() {
+    await this.delObjectAsync('reviews.before.data.detections', { recursive: true });
+    await this.delObjectAsync('reviews.after.data.detections', { recursive: true });
+
     const remoteState = await this.getObjectAsync('lastidurl');
     if (remoteState) {
-      this.log.info('clean old states ' + vin);
+      this.log.info('clean old states ');
       await this.delObjectAsync('', { recursive: true });
     }
     await this.setObjectNotExistsAsync('info.connection', {
@@ -264,11 +281,21 @@ class Frigate extends utils.Adapter {
               // }
             }
             // join every path item except the first one to create a flat hierarchy
-            if (pathArray[0] !== 'stats' && pathArray[0] !== 'events' && pathArray[0] !== 'available') {
+            if (
+              pathArray[0] !== 'stats' &&
+              pathArray[0] !== 'events' &&
+              pathArray[0] !== 'available' &&
+              pathArray[0] !== 'reviews' &&
+              pathArray[0] !== 'camera_activity' &&
+              pathArray.length > 1
+            ) {
               const cameraId = pathArray.shift();
               pathArray = [cameraId, pathArray.join('_')];
             }
-
+            if (pathArray[0] === 'reviews') {
+              delete data.after.data.detections;
+              delete data.before.data.detections;
+            }
             //create devices state for cameras
             if (pathArray[0] === 'stats') {
               delete data['cpu_usages'];
@@ -878,7 +905,7 @@ class Frigate extends utils.Adapter {
           const pathArray = ['frigate', ...idArray, 'set'];
 
           const topic = pathArray.join('/');
-          this.log.debug('publish' + ' ' + topic + ' ' + state.val);
+          this.log.debug('publish sending to ' + ' ' + topic + ' ' + state.val);
           aedes.publish(
             {
               cmd: 'publish',
@@ -925,6 +952,25 @@ class Frigate extends utils.Adapter {
               this.log.warn('createEvent error from http://' + this.config.friurl + '/api/events');
               this.log.error(error);
             });
+        }
+        if (id.endsWith('remote.restart') && state.val) {
+          //remove adapter name and instance from id
+
+          aedes.publish(
+            {
+              cmd: 'publish',
+              qos: 0,
+              topic: `frigate/restart`,
+              retain: false,
+            },
+            (err) => {
+              if (err) {
+                this.log.error(err);
+              } else {
+                this.log.info('published ' + `frigate/restart`);
+              }
+            },
+          );
         }
         if (id.endsWith('remote.ptz')) {
           //remove adapter name and instance from id

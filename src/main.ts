@@ -1090,7 +1090,7 @@ class FrigateAdapter extends Adapter {
                             });
                         } else {
                             await this.sendToAsync(sendInstance, {
-                                user,
+                                chatId: user,
                                 message: fileName || messageText,
                                 text: fileName || messageText,
                                 type,
